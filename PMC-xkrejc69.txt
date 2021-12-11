@@ -1,17 +1,22 @@
 Architektury Výpočetních Systémů (AVS 2021)
 Projekt č. 2 (PMC)
-Login: xlogin00
+Login: xkrejc69
 
 Úloha 1: Paralelizace původního řešení
 ===============================================================================
 
 1) Kterou ze smyček (viz zadání) je vhodnější paralelizovat a co způsobuje 
    neefektivitu paralelizaci té druhé?
+je výrazně efektivnější paralelizovat první smyčku
+první smyčka je na vyšší úrovni a obsahuje v sobě druhou, dojde tak k paralelizaci většího množství kódu
+vzhledem k tomu, že druhá smyčka je vnořená tak je dále možné, že režije na opakované vytváření paralelních oblastí způsobí vyšší zpomalení
 
 2) Jaké plánování (rozdělení práce mezi vlákna) jste zvolili a proč? 
    Jaký vliv má velikost "chunk" při dynamickém plánování (8, 16, 32, 64)?
+mezi jednotlivými způsoby plánování i pro různé chunk size nebyl výrazný rozdíl
 
 3) Jakým způsobem zajišťujete ukládání trojúhelníků z několika vláken současně?
+vzájemným vyloučením pomocí #pragma omp critical
 
 
 Úloha 2: Paralelní průchod stromem
