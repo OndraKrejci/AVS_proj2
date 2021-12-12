@@ -7,16 +7,24 @@ Login: xkrejc69
 
 1) Kterou ze smyček (viz zadání) je vhodnější paralelizovat a co způsobuje 
    neefektivitu paralelizaci té druhé?
-je výrazně efektivnější paralelizovat první smyčku
-první smyčka je na vyšší úrovni a obsahuje v sobě druhou, dojde tak k paralelizaci většího množství kódu
-vzhledem k tomu, že druhá smyčka je vnořená tak je dále možné, že režije na opakované vytváření paralelních oblastí způsobí vyšší zpomalení
+- je výrazně efektivnější paralelizovat první smyčku (například pro schedule(static) je paralelizace první 14x rychlejší)
+- první smyčka je na vyšší úrovni a obsahuje v sobě druhou, dojde tak k paralelizaci většího množství kódu
+- vzhledem k tomu, že druhá smyčka je vnořená tak je dále možné, že režie na opakované vytváření paralelních oblastí způsobí vyšší zpomalení,
+  tomu také napovídá, že smyčka je pro schedule(guided) ještě výrazněji pomalejší než pro static/guided,
+  tzn. iterace smyčky se provádí příliš rychle a režie pro plánování dynamic zabere více času, než je získáno paralelizací
 
 2) Jaké plánování (rozdělení práce mezi vlákna) jste zvolili a proč? 
    Jaký vliv má velikost "chunk" při dynamickém plánování (8, 16, 32, 64)?
-mezi jednotlivými způsoby plánování i pro různé chunk size nebyl výrazný rozdíl
+- při testování rychlosti pro různé plánování s různými chunk size  se mezi sebou typy plánování pro větší vstupy (bun_zipper_res1.pts, grid_size=64|128)
+  lišily minimálně
+- pro menší vstupy (bun_zipper_res4.pts) a grid_size=32|64 opět nebyl mezi typy plánování výrazný rozdíl a jelikož se jednalo o rozdíly v řádech stovek ms,
+  tak jsou tyto rozdíly stejně zanedbatelné
+- velikost chunk pro dynamické plánování opět nemá žádný vliv na rychlost, pro libovolně velký vstup (bun_zipper_res4.pts, bun_zipper_res1.pts,
+  dragon_vrip_res1.pts) je rychlost pro všechny velikosti chunk 1-64 stejná
+- vzhledem k tomu, že rychlost není významně ovlivněna způsobem plánování, tak jsem použil nejjednodušší statické plánování
 
 3) Jakým způsobem zajišťujete ukládání trojúhelníků z několika vláken současně?
-vzájemným vyloučením pomocí #pragma omp critical
+- vzájemným vyloučením pomocí #pragma omp critical
 
 
 Úloha 2: Paralelní průchod stromem
