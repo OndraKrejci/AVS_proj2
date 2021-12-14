@@ -27,7 +27,13 @@ unsigned TreeMeshBuilder::marchCubes(const ParametricScalarField &field)
 
     unsigned trianglesCount = 0;
     
-    trianglesCount = octree(field, Vec3_t<float>{0, 0, 0}, mGridSize);
+    #pragma omp parallel default(none) shared(field, trianglesCount)
+    {
+        #pragma omp single
+        {
+            trianglesCount = octree(field, Vec3_t<float>{0, 0, 0}, mGridSize);
+        }
+    }
 
     return trianglesCount;
 }
@@ -67,12 +73,17 @@ void TreeMeshBuilder::emitTriangle(const BaseMeshBuilder::Triangle_t &triangle)
     // Store generated triangle into vector (array) of generated triangles.
     // The pointer to data in this array is return by "getTrianglesArray(...)" call
     // after "marchCubes(...)" call ends.
+    #pragma omp critical
     mTriangles.push_back(triangle);
 }
 
 unsigned TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_t<float>& start, unsigned len){
+    if(isEmpty(field, start, len)){
+        return 0;
+    }
+
     if(len == 1){
-        return buildCube(start, field);
+        return buildCube(start, field);;
     }
 
     unsigned totalTriangles = 0;
@@ -90,10 +101,17 @@ unsigned TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_
         {start.x + half, start.y + half, start.z + half}
     };
 
-    for(unsigned i = 0; i < positions.size(); i++){
-        totalTriangles += octree(field, positions[i], half);
+    for(const auto& position : positions){
+        #pragma omp task default(none) shared(field, half, totalTriangles) firstprivate(position)
+        {
+            unsigned triangleCount = octree(field, position, half);
+
+            #pragma omp atomic update
+            totalTriangles += triangleCount;
+        }
     }
 
+    #pragma omp taskwait
     return totalTriangles;
 }
 
