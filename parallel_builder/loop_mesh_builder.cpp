@@ -19,8 +19,18 @@ LoopMeshBuilder::LoopMeshBuilder(unsigned gridEdgeSize)
     : BaseMeshBuilder(gridEdgeSize, "OpenMP Loop")
 {}
 
-unsigned LoopMeshBuilder::marchCubes(const ParametricScalarField &field)
+LoopMeshBuilder::~LoopMeshBuilder(){
+    if(x != nullptr){
+        _mm_free(x);
+        _mm_free(y);
+        _mm_free(z);
+    }
+}
+
+unsigned LoopMeshBuilder::marchCubes(const ParametricScalarField& field)
 {
+    fieldToArrays(field);
+
     // Loop over each coordinate in the 3D grid.
     #pragma omp parallel default(none) shared(field)
     {
@@ -43,35 +53,50 @@ unsigned LoopMeshBuilder::marchCubes(const ParametricScalarField &field)
 }
 
 // NOTE: This method is called from "buildCube(...)"!
-float LoopMeshBuilder::evaluateFieldAt(const Vec3_t<float> &pos, const ParametricScalarField &field)
+float LoopMeshBuilder::evaluateFieldAt(const Vec3_t<float>& pos, const ParametricScalarField& field)
 {
-    // 1. Store pointer to and number of 3D points in the field
-    const Vec3_t<float> *pPoints = field.getPoints().data();
-    const unsigned count = unsigned(field.getPoints().size());
-
     float value = std::numeric_limits<float>::max();
 
-    // 2. Find minimum square distance from points "pos" to any point in the
-    //    field.
+    const float* lx = x;
+    const float* ly = y;
+    const float* lz = z;
+
+    // Find minimum square distance from points "pos" to any point in the field.
     //#pragma omp parallel for default(none) shared(value, pPoints, pos) reduction(min:value) schedule(static)
-    #pragma omp simd reduction(min:value)
-    for(unsigned i = 0; i < count; i++)
+    #pragma omp simd reduction(min:value) aligned(lx:64, ly:64, lz:64)
+    for(unsigned i = 0; i < fieldSize; i++)
     {
-        float distanceSquared  = (pos.x - pPoints[i].x) * (pos.x - pPoints[i].x);
-        distanceSquared       += (pos.y - pPoints[i].y) * (pos.y - pPoints[i].y);
-        distanceSquared       += (pos.z - pPoints[i].z) * (pos.z - pPoints[i].z);
+        float distanceSquared  = (pos.x - x[i]) * (pos.x - x[i]);
+        distanceSquared       += (pos.y - y[i]) * (pos.y - y[i]);
+        distanceSquared       += (pos.z - z[i]) * (pos.z - z[i]);
 
         // Comparing squares instead of real distance to avoid unnecessary "sqrt"s in the loop.
         value = std::min(value, distanceSquared);
     }
 
-    // 3. Finally take square root of the minimal square distance to get the real distance
+    // Finally take square root of the minimal square distance to get the real distance
     return sqrt(value);
 }
 
 // NOTE: This method is called from "buildCube(...)"!
-void LoopMeshBuilder::emitTriangle(const BaseMeshBuilder::Triangle_t &triangle)
+void LoopMeshBuilder::emitTriangle(const BaseMeshBuilder::Triangle_t& triangle)
 {
     // Store generated triangle into vector (array) of generated triangles.
     mTriangleVectors[omp_get_thread_num()].push_back(triangle);
+}
+
+inline void LoopMeshBuilder::fieldToArrays(const ParametricScalarField& field){
+    const Vec3_t<float>* pPoints = field.getPoints().data();
+
+    fieldSize = unsigned(field.getPoints().size());
+
+    x = (float*) _mm_malloc(fieldSize * sizeof(float), 64);
+    y = (float*) _mm_malloc(fieldSize * sizeof(float), 64);
+    z = (float*) _mm_malloc(fieldSize * sizeof(float), 64);
+
+    for(unsigned i = 0; i < fieldSize; i++){
+        x[i] = pPoints[i].x;
+        y[i] = pPoints[i].y;
+        z[i] = pPoints[i].z;
+    }
 }
