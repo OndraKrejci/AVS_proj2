@@ -87,12 +87,11 @@ void TreeMeshBuilder::emitTriangle(const BaseMeshBuilder::Triangle_t& triangle)
     mTriangleVectors[omp_get_thread_num()].push_back(triangle);
 }
 
-unsigned TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_t<float>& start, unsigned len){
+void TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_t<float>& start, unsigned len){
     if(len == 1){
-        return buildCube(start, field);
+        buildCube(start, field);
+        return;
     }
-
-    unsigned totalTriangles = 0;
 
     const unsigned half = len >> 1;
 
@@ -109,20 +108,17 @@ unsigned TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_
 
     for(const auto& position : positions){
         if(isEmpty(field, position, half)){
-            return 0;
+            return;
         }
 
-        #pragma omp task default(none) shared(field, half, totalTriangles) firstprivate(position)
+        #pragma omp task default(none) shared(field, half) firstprivate(position)
         {
-            unsigned triangleCount = octree(field, position, half);
-
-            #pragma omp atomic update
-            totalTriangles += triangleCount;
+            octree(field, position, half);
         }
     }
 
     #pragma omp taskwait
-    return totalTriangles;
+    return;
 }
 
 bool TreeMeshBuilder::isEmpty(const ParametricScalarField& field, const Vec3_t<float>& start, unsigned len){

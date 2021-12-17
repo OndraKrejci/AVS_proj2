@@ -28,7 +28,7 @@ protected:
     void emitTriangle(const Triangle_t &triangle);
     const Triangle_t *getTrianglesArray() const { return mTriangles.data(); }
     
-    unsigned octree(const ParametricScalarField& field, const Vec3_t<float>& start, unsigned len);
+    void octree(const ParametricScalarField& field, const Vec3_t<float>& start, unsigned len);
     bool isEmpty(const ParametricScalarField& field, const Vec3_t<float>& start, unsigned len);
     void fieldToArrays(const ParametricScalarField& field);
 
