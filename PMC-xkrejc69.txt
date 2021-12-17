@@ -7,10 +7,10 @@ Login: xkrejc69
 
 1) Kterou ze smyček (viz zadání) je vhodnější paralelizovat a co způsobuje 
    neefektivitu paralelizaci té druhé?
-- je výrazně efektivnější paralelizovat první smyčku (například pro schedule(static) je paralelizace první 14x rychlejší)
+- je výrazně efektivnější paralelizovat první smyčku (například pro paralelizaci se schedule(static) je výpočet 14x rychlejší)
 - první smyčka je na vyšší úrovni a obsahuje v sobě druhou, dojde tak k paralelizaci většího množství kódu
 - vzhledem k tomu, že druhá smyčka je vnořená tak je dále možné, že režie na opakované vytváření paralelních oblastí způsobí vyšší zpomalení,
-  tomu také napovídá, že smyčka je pro schedule(guided) ještě výrazněji pomalejší než pro static/guided,
+  tomu také napovídá, že smyčka je pro schedule(dynamic) ještě výrazněji pomalejší než pro static/guided,
   tzn. iterace smyčky se provádí příliš rychle a režie pro plánování dynamic zabere více času, než je získáno paralelizací
 
 2) Jaké plánování (rozdělení práce mezi vlákna) jste zvolili a proč? 
@@ -21,34 +21,57 @@ Login: xkrejc69
   tak jsou tyto rozdíly stejně zanedbatelné
 - velikost chunk pro dynamické plánování opět nemá žádný vliv na rychlost, pro libovolně velký vstup (bun_zipper_res4.pts, bun_zipper_res1.pts,
   dragon_vrip_res1.pts) je rychlost pro všechny velikosti chunk 1-64 stejná
+- to že je rychlost téměř nezávislá na typu plánování je nejspíše dané tím, že výpočet libovolné části smyčky trvá přibližně stejnou dobu
+  a provedení smyčky zabere dostatečnou dobu, aby se překryla režie plánování
 - vzhledem k tomu, že rychlost není významně ovlivněna způsobem plánování, tak jsem použil nejjednodušší statické plánování
 
 3) Jakým způsobem zajišťujete ukládání trojúhelníků z několika vláken současně?
-- vzájemným vyloučením pomocí #pragma omp critical
-
+- vytvořením pole vektorů trojúhelínků o velikosti maximálního počtu vláken,
+  každé vlákno zapisuje na pozici danou svým číslem,
+  po skončení výpočtu se vektory sloučí do jednoho
+- pro toto řešení není nutné použít kritickou sekci
 
 Úloha 2: Paralelní průchod stromem
 ===============================================================================
 
 1) Stručně popište použití OpenMP tasků ve vašem řešení.
+ - metoda octree provádí rozdělení prostoru na 8 kostek, pro každou z kostek se vytvoří task
+   pro rekurzivní volání metody octree
 
 2) Jakým způsobem jste realizovali sesbírání celkového počtu trojúhelníků?
+- ukládání trojúhelníků funguje stejně jako u loop implementace,
+  po skončení výpočtu se vektory spojí do jednoho a vrátí se jeho velikost
 
 3) Jaký vliv má na vaše řešení tzv. "cut-off"? Je vhodné vytvářet nový 
    task pro každou krychli na nejnižší úrovni?
+- pro větší vstup (dragon_vrip_res1.pts, grid_size=64|128) dojde pro cut-off při délce hrany 1
+  ke zrychlení, pro cut-off 2 už je rychlst nižší
+- pro malé vstupy dochází ke zrychlení i pro vyšší cut-off než 1
+- jako cut-off hranice byla zvolena délka hrany 1, která má lepší výsledky pro větší vstupy
+- pro nejmenší krychle se již nevyplatí vytvářet samostatný task
 
 4) Jakým způsobem zajišťujete ukládání trojúhelníků z několika vláken současně?
+- ukládání trojúhelníků funguje stejně jako u loop implementace
 
 Úloha 3: Grafy škálování všech řešení
 ===============================================================================
 
 1) Stručně zhodnoťte efektivitu vytvořených řešení (na základě grafů škálování).
+- pro menší rozměry mřížky je loop mírně efektivnější, ale pro velké rozměry je méně efektivní
+- obě řešení jsou pro malé vstupy rychlejší se zvětšujícím se počtem vláken až po 16, potom začne jejich efektivita klesat
+- pro větší vstupy dojde ke zrychlení pro 2 vlákna, pro další vlákna dojde ke zpomalení,
+  pro 16 a více vláken se rychlost opět zvyšuje
 
 2) V jakém případě (v závislosti na počtu bodů ve vstupním souboru a velikosti 
    mřížky) bude vaše řešení 1. úlohy neefektivní? (pokud takový případ existuje)
+- pro malé vstupy a mřížku se nevyplatí vytvářet vlákna (+ se nevyplatí zpomalení z dalších optimalizací)
+  a loop tak bude méně efektivní
 
 3) Je (nebo není) stromový algoritmus efektivnější z pohledu slabého škálování 
    vzhledem ke vstupu?
+- spíše není efektivnější
+- pro menší vstupy je méně efektivní než loop a loop pro nejmenší vstup i lépe škáluje s více vlákny
+- na druhou stranu jde pro "středně" velké vstupy vidět, že tree je s více vlákny rychlejší
 
 Úloha 4: Analýza využití jader pomocí VTune
 ================================================================================
