@@ -5,13 +5,14 @@
  *
  * @brief   Parallel Marching Cubes implementation using OpenMP loops
  *
- * @date    11. 12. 2021
+ * @date    17. 12. 2021
  **/
 
 #ifndef LOOP_MESH_BUILDER_H
 #define LOOP_MESH_BUILDER_H
 
 #include <vector>
+
 #include "base_mesh_builder.h"
 
 class LoopMeshBuilder : public BaseMeshBuilder
@@ -25,6 +26,9 @@ protected:
     void emitTriangle(const Triangle_t &triangle);
     const Triangle_t *getTrianglesArray() const { return mTriangles.data(); }
 
+    const int threads = omp_get_max_threads();
+
+    std::vector<std::vector<Triangle_t>> mTriangleVectors{threads};
     std::vector<Triangle_t> mTriangles{}; ///< Temporary array of triangles
 };
 
