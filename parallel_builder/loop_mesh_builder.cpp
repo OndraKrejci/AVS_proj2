@@ -17,9 +17,13 @@
 
 LoopMeshBuilder::LoopMeshBuilder(unsigned gridEdgeSize)
     : BaseMeshBuilder(gridEdgeSize, "OpenMP Loop")
-{}
+{
+    mTriangleVectors = new std::vector<Triangle_t>[threads];
+}
 
 LoopMeshBuilder::~LoopMeshBuilder(){
+    delete[] mTriangleVectors;
+
     if(x != nullptr){
         _mm_free(x);
         _mm_free(y);
@@ -44,8 +48,8 @@ unsigned LoopMeshBuilder::marchCubes(const ParametricScalarField& field)
         }
     }
 
-    for(const auto& vec : mTriangleVectors){
-        mTriangles.insert(mTriangles.end(), vec.begin(), vec.end());
+    for(unsigned i = 0; i < threads; i++){
+        mTriangles.insert(mTriangles.end(), mTriangleVectors[i].begin(), mTriangleVectors[i].end());
     }
 
     // Return total number of triangles generated.
@@ -94,6 +98,7 @@ inline void LoopMeshBuilder::fieldToArrays(const ParametricScalarField& field){
     y = (float*) _mm_malloc(fieldSize * sizeof(float), 64);
     z = (float*) _mm_malloc(fieldSize * sizeof(float), 64);
 
+    #pragma omp parallel for default(none) shared(fieldSize, pPoints, x, y, z) if(fieldSize > 10000)
     for(unsigned i = 0; i < fieldSize; i++){
         x[i] = pPoints[i].x;
         y[i] = pPoints[i].y;

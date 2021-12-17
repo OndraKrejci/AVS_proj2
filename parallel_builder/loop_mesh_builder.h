@@ -31,7 +31,7 @@ protected:
 
     const int threads = omp_get_max_threads();
 
-    std::vector<std::vector<Triangle_t>> mTriangleVectors{threads};
+    std::vector<Triangle_t>* mTriangleVectors = nullptr;
     std::vector<Triangle_t> mTriangles{}; ///< Temporary array of triangles
 
     unsigned fieldSize = 0;
