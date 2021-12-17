@@ -39,17 +39,20 @@ unsigned TreeMeshBuilder::marchCubes(const ParametricScalarField& field)
 
     fieldToArrays(field);
 
-    unsigned trianglesCount = 0;
-
-    #pragma omp parallel default(none) shared(field, trianglesCount)
+    #pragma omp parallel default(none) shared(field)
     {
         #pragma omp single
         {
-            trianglesCount = octree(field, Vec3_t<float>{0, 0, 0}, mGridSize);
+            octree(field, Vec3_t<float>{0, 0, 0}, mGridSize);
         }
     }
 
-    return trianglesCount;
+    for(unsigned i = 0; i < threads; i++){
+        mTriangles.insert(mTriangles.end(), mTriangleVectors[i].begin(), mTriangleVectors[i].end());
+    }
+
+    // Return total number of triangles generated.
+    return mTriangles.size();
 }
 
 // NOTE: This method is called from "buildCube(...)"!
