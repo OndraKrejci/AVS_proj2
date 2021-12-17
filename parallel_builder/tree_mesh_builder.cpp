@@ -111,7 +111,7 @@ void TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_t<fl
             return;
         }
 
-        #pragma omp task default(none) shared(field, half) firstprivate(position)
+        #pragma omp task default(none) shared(field, half) firstprivate(position) if(half > 1)
         {
             octree(field, position, half);
         }
