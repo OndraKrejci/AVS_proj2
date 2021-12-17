@@ -85,7 +85,7 @@ float LoopMeshBuilder::evaluateFieldAt(const Vec3_t<float>& pos, const Parametri
 // NOTE: This method is called from "buildCube(...)"!
 void LoopMeshBuilder::emitTriangle(const BaseMeshBuilder::Triangle_t& triangle)
 {
-    // Store generated triangle into vector (array) of generated triangles.
+    // Store generated triangle
     mTriangleVectors[omp_get_thread_num()].push_back(triangle);
 }
 
