@@ -26,7 +26,7 @@ unsigned TreeMeshBuilder::marchCubes(const ParametricScalarField &field)
     // code and only when that works add OpenMP tasks to achieve parallelism.
 
     unsigned trianglesCount = 0;
-    
+
     #pragma omp parallel default(none) shared(field, trianglesCount)
     {
         #pragma omp single
@@ -78,17 +78,13 @@ void TreeMeshBuilder::emitTriangle(const BaseMeshBuilder::Triangle_t &triangle)
 }
 
 unsigned TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_t<float>& start, unsigned len){
-    if(isEmpty(field, start, len)){
-        return 0;
-    }
-
     if(len == 1){
-        return buildCube(start, field);;
+        return buildCube(start, field);
     }
 
     unsigned totalTriangles = 0;
 
-    const unsigned half = len / 2;
+    const unsigned half = len >> 1;
 
     const std::vector<Vec3_t<float>> positions{
         {start.x, start.y, start.z},
@@ -102,6 +98,10 @@ unsigned TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_
     };
 
     for(const auto& position : positions){
+        if(isEmpty(field, position, half)){
+            return 0;
+        }
+
         #pragma omp task default(none) shared(field, half, totalTriangles) firstprivate(position)
         {
             unsigned triangleCount = octree(field, position, half);
@@ -116,5 +116,9 @@ unsigned TreeMeshBuilder::octree(const ParametricScalarField &field, const Vec3_
 }
 
 bool TreeMeshBuilder::isEmpty(const ParametricScalarField& field, const Vec3_t<float>& start, unsigned len){
-    return false;
+    const float y = mIsoLevel + (HALF_SQRT3 * len);
+    const unsigned half = len >> 1;
+    const float fp = evaluateFieldAt(Vec3_t<float>{(start.x + half) * mGridResolution, (start.y + half) * mGridResolution, (start.z + half) * mGridResolution}, field);
+
+    return (fp > y);
 }
