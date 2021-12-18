@@ -15,7 +15,8 @@ Login: xkrejc69
 
 2) Jaké plánování (rozdělení práce mezi vlákna) jste zvolili a proč? 
    Jaký vliv má velikost "chunk" při dynamickém plánování (8, 16, 32, 64)?
-- při testování rychlosti pro různé plánování s různými chunk size se mezi sebou typy plánování pro větší vstupy (bun_zipper_res1.pts, grid_size=64|128)
+- při testování rychlosti pro různé plánování s různými chunk size se mezi sebou typy plánování
+  pro větší vstupy (bun_zipper_res1.pts, dragon_vrip_res1.pts, grid_size=64|128)
   lišily minimálně (pouze plánování static s nastaveným chunk size bylo mírně pomalejší)
 - pro menší vstupy (bun_zipper_res4.pts) a grid_size=32|64 opět nebyl mezi typy plánování výrazný rozdíl a jelikož se jednalo o rozdíly v řádech stovek ms,
   tak jsou tyto rozdíly zanedbatelné
@@ -70,7 +71,10 @@ Login: xkrejc69
 3) Je (nebo není) stromový algoritmus efektivnější z pohledu slabého škálování 
    vzhledem ke vstupu?
 - spíše je efektivnější
-- pro málo vláken má horší výsledky než loop, ale se zvětšujícím se počtem vláken už škáluje lépe
+- průběhy pro různé velikosti vstupu nejsou konstatní
+- při přidání menšího počtu vláken se snižuje rychlost (s výjimkou malého vstupu, kde přidání menšího množství vláken pomůže)
+- pro velké počty vláken už se rychlost s větším počtem vláken zvyšuje
+- (pro málo vláken má horší výsledky než loop, ale se zvětšujícím se počtem vláken už škáluje lépe)
 
 Úloha 4: Analýza využití jader pomocí VTune
 ================================================================================
@@ -92,4 +96,4 @@ Login: xkrejc69
 3) Jaké jsou závěry z těchto měření?
 - obě implementace v obou případech využijí CPU téměř maximálně
 - oproti referenční implementaci využívají CPU výrazně efektivněji
-- referenční implementace v obou případech využívá stejné % CPU, protože využívá pouze jedno vlkano
+- referenční implementace v obou případech využívá stejné % CPU, protože využívá pouze jedno vlákno
