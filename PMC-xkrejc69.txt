@@ -73,7 +73,7 @@ Login: xkrejc69
 - spíše je efektivnější
 - průběhy pro různé velikosti vstupu nejsou konstatní
 - při přidání menšího počtu vláken se snižuje rychlost (s výjimkou malého vstupu, kde přidání menšího množství vláken pomůže)
-- pro velké počty vláken už se rychlost s větším počtem vláken zvyšuje
+- pro velké počty vláken (16/32) se rychlost zvýší
 - (pro málo vláken má horší výsledky než loop, ale se zvětšujícím se počtem vláken už škáluje lépe)
 
 Úloha 4: Analýza využití jader pomocí VTune
