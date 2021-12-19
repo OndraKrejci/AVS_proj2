@@ -45,8 +45,9 @@ Login: xkrejc69
 
 3) Jaký vliv má na vaše řešení tzv. "cut-off"? Je vhodné vytvářet nový 
    task pro každou krychli na nejnižší úrovni?
-- pro větší vstup (dragon_vrip_res1.pts, grid_size=64|128) dojde pro cut-off při délce hrany 1
-  ke zrychlení, pro cut-off 2 už je rychlost nižší
+- neprovádím žádný cut-off podle hloubky zanoření, jen podle délky hrany
+- pro větší vstup (dragon_vrip_res1.pts, grid_size=64|128) dojde pro cut-off při délce hrany 1 (tzn. pro délku 1
+  už se nevytváří task) ke zrychlení, pro cut-off 2 už je rychlost nižší
 - pro malé vstupy dochází ke zrychlení i pro vyšší hodnotu cut-off než 1
 - jako cut-off hranice byla zvolena délka hrany 1, která má lepší výsledky pro větší vstupy
 - pro nejmenší krychle se již nevyplatí vytvářet samostatný task
